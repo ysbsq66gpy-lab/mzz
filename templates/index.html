@@ -39,7 +39,10 @@
         .results-layout { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 20px 0; }
         .results-main { max-width: 750px; contain: layout; }
         .result-count { font-size: 13px; color: #70757a; margin-bottom: 20px; }
-        .search-result { margin-bottom: 26px; }
+        .search-result { margin-bottom: 26px; display: grid; grid-template-columns: 1fr 120px; gap: 15px; align-items: start; }
+        .result-content { min-width: 0; }
+        .result-image { width: 120px; height: 80px; object-fit: cover; border-radius: 4px; display: none; }
+        .search-result:has(.result-image[src]) .result-image { display: block; }
         .result-url { font-size: 12px; color: #006621; margin-bottom: 2px; word-break: break-word; }
         .result-title { font-size: 20px; font-weight: 400; line-height: 1.3; margin-bottom: 8px; }
         .result-title a { color: #1f0dcc; text-decoration: none; }
@@ -122,7 +125,8 @@
                     let html = `<div class="result-count">${data.results.length}개의 검색 결과</div>`;
                     data.results.forEach(item => {
                         const url = new URL(item.link).hostname + new URL(item.link).pathname.split('/').slice(0,3).join('/');
-                        html += `<div class="search-result"><div class="result-url">${url}</div><div class="result-title"><a href="${item.link}" target="_blank">${item.title}</a></div><div class="result-snippet">${item.snippet}</div><div class="result-time">🕐 ${item.time_kst||'N/A'}</div></div>`;
+                        const img = item.image ? `<img class="result-image" src="${item.image}" alt="뉴스 이미지" loading="lazy" />` : '<img class="result-image" />';
+                        html += `<div class="search-result"><div class="result-content"><div class="result-url">${url}</div><div class="result-title"><a href="${item.link}" target="_blank">${item.title}</a></div><div class="result-snippet">${item.snippet}</div><div class="result-time">🕐 ${item.time_kst||'N/A'}</div></div>${img}</div>`;
                     });
                     resultsMain.innerHTML = html;
                 } else {

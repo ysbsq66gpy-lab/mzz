@@ -51,8 +51,12 @@ def search_keyword():
             desc = desc_el.text if desc_el is not None else ''
             desc_text = re.sub(r'<[^>]+>', '', desc)
             
+            # Extract image from description HTML
+            img_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', desc)
+            img_url = img_match.group(1) if img_match else ''
+            
             pub = pub_el.text if pub_el is not None else ''
-            items.append({'title': title, 'link': link, 'snippet': desc_text, 'time': pub})
+            items.append({'title': title, 'link': link, 'snippet': desc_text, 'time': pub, 'image': img_url})
         
         # Helper function to parse RFC 2822 date
         def _parse_time(t):
