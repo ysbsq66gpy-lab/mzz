@@ -78,6 +78,26 @@
             color: #202124;
         }
         
+        .search-clear-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9aa0a6;
+            font-size: 20px;
+            padding: 0 5px;
+            display: none;
+        }
+        
+        .search-clear-btn:hover {
+            color: #202124;
+            box-shadow: none;
+        }
+        
+        .home-search-box:has(input:not(:placeholder-shown)) .search-clear-btn,
+        .header-search-box:has(input:not(:placeholder-shown)) .search-clear-btn {
+            display: block;
+        }
+        
         .home-buttons {
             display: flex;
             gap: 10px;
@@ -305,6 +325,7 @@
         </div>
         <div class="home-search-box">
             <input type="text" id="homeSearch" placeholder="뉴스 검색" />
+            <button class="search-clear-btn" onclick="clearHomeSearch()">✕</button>
         </div>
         <div class="home-buttons">
             <button onclick="homeSearch()">검색</button>
@@ -319,6 +340,7 @@
                 <div class="header-logo" onclick="goHome()">뉴스검색</div>
                 <div class="header-search-box">
                     <input type="text" id="headerSearch" placeholder="뉴스 검색" />
+                    <button class="search-clear-btn" onclick="clearHeaderSearch()">✕</button>
                 </div>
             </div>
             <div id="tabs" class="tabs">
@@ -339,6 +361,16 @@
     <script>
         let currentKeyword = '';
         let allResults = [];
+        
+        function clearHomeSearch() {
+            document.getElementById('homeSearch').value = '';
+            document.getElementById('homeSearch').focus();
+        }
+        
+        function clearHeaderSearch() {
+            document.getElementById('headerSearch').value = '';
+            document.getElementById('headerSearch').focus();
+        }
         
         function showHome() {
             document.getElementById('home-screen').classList.remove('hidden');
