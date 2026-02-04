@@ -24,12 +24,21 @@
             justify-content: space-between;
             padding: 0 20px;
             border-bottom: 1px solid #dadce0;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 100;
         }
         
         .logo {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 500;
             color: #4285f4;
+            cursor: pointer;
+        }
+        
+        .header.search-active .logo {
+            font-size: 18px;
         }
         
         .container {
@@ -43,22 +52,31 @@
         
         .container.search-active {
             min-height: auto;
-            padding-top: 20px;
-            padding-bottom: 20px;
-            justify-content: center;
+            padding-top: 0;
+            padding-bottom: 0;
+            justify-content: flex-start;
         }
         
         .search-section {
             width: 100%;
             max-width: 600px;
             margin-bottom: 30px;
+            padding: 0;
         }
         
         .search-section.search-active {
+            position: sticky;
+            top: 60px;
             max-width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 0;
+            padding: 15px 20px;
+            background: #fff;
+            border-bottom: 1px solid #dadce0;
             display: flex;
-            gap: 15px;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            z-index: 99;
         }
         
         .search-box {
@@ -82,9 +100,9 @@
         }
         
         .search-box.search-active {
-            height: 40px;
-            max-width: 500px;
-            flex: 1;
+            height: 44px;
+            max-width: 600px;
+            flex: 0 1 600px;
         }
         
         input[type="text"] {
@@ -124,6 +142,10 @@
             gap: 10px;
         }
         
+        .button-group.search-active {
+            display: none;
+        }
+        
         button.search-btn {
             background: #4285f4;
             color: #fff;
@@ -135,20 +157,42 @@
             background: #3b78e7;
         }
         
+        button.search-active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 10px;
+            font-size: 12px;
+            background: transparent;
+            border: none;
+            color: #3c4043;
+            cursor: pointer;
+        }
+        
+        button.search-active:hover {
+            background: #e8e8e8;
+            border-radius: 50%;
+            box-shadow: none;
+        }
+        
         .results-container {
             width: 100%;
             max-width: 750px;
+            margin: 0 auto;
+            padding: 20px 0;
         }
         
         .result-count {
             font-size: 13px;
             color: #70757a;
             margin-bottom: 20px;
+            padding: 0 20px;
         }
         
         .search-result {
             margin-bottom: 26px;
             padding-bottom: 0;
+            padding: 0 20px;
         }
         
         .result-url {
@@ -199,7 +243,7 @@
             padding: 15px;
             border-radius: 4px;
             color: #856404;
-            margin: 20px 0;
+            margin: 20px;
         }
         
         .no-results {
@@ -222,8 +266,8 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">뉴스검색</div>
+    <div class="header" id="header">
+        <div class="logo" onclick="resetToHome()">뉴스검색</div>
     </div>
     
     <div id="main-container" class="container">
@@ -232,7 +276,7 @@
                 <input type="text" id="keywordSearch" placeholder="뉴스 검색" />
             </div>
         </div>
-        <div class="button-group">
+        <div class="button-group" id="button-group">
             <button class="search-btn" onclick="searchKeyword()">검색</button>
             <button onclick="clearSearch()">초기화</button>
         </div>
@@ -245,22 +289,34 @@
             const container = document.getElementById('main-container');
             const section = document.querySelector('.search-section');
             const box = document.querySelector('.search-box');
+            const header = document.getElementById('header');
+            const buttonGroup = document.getElementById('button-group');
             
             if (isActive) {
                 container.classList.add('search-active');
                 section.classList.add('search-active');
                 box.classList.add('search-active');
+                header.classList.add('search-active');
+                buttonGroup.classList.add('search-active');
             } else {
                 container.classList.remove('search-active');
                 section.classList.remove('search-active');
                 box.classList.remove('search-active');
+                header.classList.remove('search-active');
+                buttonGroup.classList.remove('search-active');
             }
         }
         
-        function clearSearch() {
+        function resetToHome() {
             document.getElementById('keywordSearch').value = '';
             document.getElementById('result').innerHTML = '';
+            document.getElementById('main-container').style.minHeight = 'calc(100vh - 60px)';
+            document.getElementById('main-container').style.justifyContent = 'center';
             setSearchActive(false);
+        }
+        
+        function clearSearch() {
+            resetToHome();
         }
         
         async function searchKeyword() {
