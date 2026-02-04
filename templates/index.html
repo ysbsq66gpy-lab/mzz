@@ -308,7 +308,6 @@
         </div>
         <div class="home-buttons">
             <button onclick="homeSearch()">검색</button>
-            <button onclick="luckySearch()">행운을 빌어요</button>
         </div>
     </div>
     
@@ -370,13 +369,7 @@
         }
         
         function luckySearch() {
-            const kw = document.getElementById('homeSearch').value.trim();
-            if (!kw) {
-                alert('검색어를 입력하세요');
-                return;
-            }
-            currentKeyword = kw;
-            performSearch(kw, true);
+            // 삭제됨
         }
         
         async function performSearch(kw, lucky = false) {
