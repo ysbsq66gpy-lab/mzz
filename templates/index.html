@@ -17,69 +17,35 @@
             color: #202124;
         }
         
-        .header {
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            border-bottom: 1px solid #dadce0;
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 100;
-        }
-        
-        .logo {
-            font-size: 20px;
-            font-weight: 500;
-            color: #4285f4;
-            cursor: pointer;
-        }
-        
-        .header.search-active .logo {
-            font-size: 18px;
-        }
-        
-        .container {
+        /* 홈 스크린 */
+        .home-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 60px);
-            padding: 0 20px;
+            min-height: 100vh;
+            padding: 20px;
         }
         
-        .container.search-active {
-            min-height: auto;
-            padding-top: 0;
-            padding-bottom: 0;
-            justify-content: flex-start;
+        .home-screen.hidden {
+            display: none;
         }
         
-        .search-section {
-            width: 100%;
-            max-width: 600px;
+        .home-logo {
+            font-size: 92px;
+            font-weight: 400;
             margin-bottom: 30px;
-            padding: 0;
+            color: #4285f4;
         }
         
-        .search-section.search-active {
-            position: sticky;
-            top: 60px;
-            max-width: 100%;
-            margin-bottom: 0;
-            padding: 15px 20px;
-            background: #fff;
-            border-bottom: 1px solid #dadce0;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            justify-content: center;
-            z-index: 99;
-        }
+        .home-logo span:nth-child(1) { color: #4285f4; }
+        .home-logo span:nth-child(2) { color: #ea4335; }
+        .home-logo span:nth-child(3) { color: #fbbc04; }
+        .home-logo span:nth-child(4) { color: #4285f4; }
+        .home-logo span:nth-child(5) { color: #34a853; }
+        .home-logo span:nth-child(6) { color: #ea4335; }
         
-        .search-box {
+        .home-search-box {
             display: flex;
             align-items: center;
             height: 48px;
@@ -88,24 +54,21 @@
             padding: 0 20px;
             background: #fff;
             transition: all 0.2s ease;
+            width: 100%;
+            max-width: 584px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px 1px rgba(64, 60, 67, 0.16);
         }
         
-        .search-box:hover {
-            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.08), 0 1px 3px rgba(27, 39, 57, 0.08);
+        .home-search-box:hover {
+            box-shadow: 0 2px 5px 1px rgba(64, 60, 67, 0.16);
         }
         
-        .search-box:focus-within {
-            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28), 0 1px 3px rgba(27, 39, 57, 0.28);
-            border-color: #dadce0;
+        .home-search-box:focus-within {
+            box-shadow: 0 2px 5px 1px rgba(64, 60, 67, 0.16);
         }
         
-        .search-box.search-active {
-            height: 44px;
-            max-width: 600px;
-            flex: 0 1 600px;
-        }
-        
-        input[type="text"] {
+        .home-search-box input {
             flex: 1;
             border: none;
             outline: none;
@@ -115,11 +78,13 @@
             color: #202124;
         }
         
-        input[type="text"]::placeholder {
-            color: #9aa0a6;
+        .home-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
         }
         
-        button {
+        .home-buttons button {
             padding: 10px 24px;
             font-size: 14px;
             font-weight: 500;
@@ -128,71 +93,138 @@
             background: #f8f9fa;
             color: #3c4043;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.1s ease;
         }
         
-        button:hover {
+        .home-buttons button:hover {
             box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
             background: #f8f9fa;
             border-color: #dadce0;
         }
         
-        .button-group {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .button-group.search-active {
+        /* 검색 결과 헤더 */
+        .search-header {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            border-bottom: 1px solid #dadce0;
+            z-index: 100;
+            padding: 10px 20px;
             display: none;
         }
         
-        button.search-btn {
-            background: #4285f4;
-            color: #fff;
-            border: 1px solid #4285f4;
-            padding: 10px 20px;
+        .search-header.visible {
+            display: block;
         }
         
-        button.search-btn:hover {
-            background: #3b78e7;
-        }
-        
-        button.search-active {
+        .header-top {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 5px 10px;
-            font-size: 12px;
-            background: transparent;
-            border: none;
-            color: #3c4043;
-            cursor: pointer;
-        }
-        
-        button.search-active:hover {
-            background: #e8e8e8;
-            border-radius: 50%;
-            box-shadow: none;
-        }
-        
-        .results-container {
-            width: 100%;
-            max-width: 750px;
+            gap: 20px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 10px 0;
+        }
+        
+        .header-logo {
+            font-size: 20px;
+            font-weight: 500;
+            color: #4285f4;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .header-search-box {
+            display: flex;
+            align-items: center;
+            height: 40px;
+            border: 1px solid #dadce0;
+            border-radius: 24px;
+            padding: 0 20px;
+            background: #fff;
+            flex: 1;
+            max-width: 500px;
+            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.08);
+        }
+        
+        .header-search-box:focus-within {
+            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+        }
+        
+        .header-search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            padding: 0 10px;
+            background: transparent;
+            color: #202124;
+        }
+        
+        /* 탭 */
+        .tabs {
+            display: none;
+            border-top: 1px solid #dadce0;
+            padding: 0 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .tabs.visible {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .tab {
+            padding: 15px 0;
+            border-bottom: 3px solid transparent;
+            color: #70757a;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tab.active {
+            color: #4285f4;
+            border-bottom-color: #4285f4;
+        }
+        
+        .tab:hover {
+            color: #202124;
+        }
+        
+        /* 결과 컨테이너 */
+        .results-wrapper {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .results-wrapper.visible {
+            display: block;
+        }
+        
+        .results-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
             padding: 20px 0;
+        }
+        
+        .results-main {
+            max-width: 750px;
         }
         
         .result-count {
             font-size: 13px;
             color: #70757a;
             margin-bottom: 20px;
-            padding: 0 20px;
         }
         
         .search-result {
             margin-bottom: 26px;
             padding-bottom: 0;
-            padding: 0 20px;
         }
         
         .result-url {
@@ -243,7 +275,7 @@
             padding: 15px;
             border-radius: 4px;
             color: #856404;
-            margin: 20px;
+            margin: 20px 0;
         }
         
         .no-results {
@@ -252,83 +284,105 @@
             color: #70757a;
         }
         
-        #result {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }
-        
         .no-results h2 {
             color: #202124;
             margin-bottom: 10px;
             font-size: 18px;
         }
+        
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #70757a;
+        }
     </style>
 </head>
 <body>
-    <div class="header" id="header">
-        <div class="logo" onclick="resetToHome()">뉴스검색</div>
+    <!-- 홈 스크린 -->
+    <div id="home-screen" class="home-screen">
+        <div class="home-logo">
+            <span>뉴</span><span>스</span><span>검</span><span>색</span>
+        </div>
+        <div class="home-search-box">
+            <input type="text" id="homeSearch" placeholder="뉴스 검색" />
+        </div>
+        <div class="home-buttons">
+            <button onclick="homeSearch()">검색</button>
+            <button onclick="luckySearch()">행운을 빌어요</button>
+        </div>
     </div>
     
-    <div id="main-container" class="container">
-        <div class="search-section">
-            <div class="search-box">
-                <input type="text" id="keywordSearch" placeholder="뉴스 검색" />
+    <!-- 검색 결과 -->
+    <div id="search-results">
+        <!-- 헤더 -->
+        <div id="search-header" class="search-header">
+            <div class="header-top">
+                <div class="header-logo" onclick="goHome()">뉴스검색</div>
+                <div class="header-search-box">
+                    <input type="text" id="headerSearch" placeholder="뉴스 검색" />
+                </div>
+            </div>
+            <div id="tabs" class="tabs">
+                <div class="tab active" data-type="all">모든 뉴스</div>
+                <div class="tab" data-type="latest">최신</div>
+                <div class="tab" data-type="relevant">관련도순</div>
             </div>
         </div>
-        <div class="button-group" id="button-group">
-            <button class="search-btn" onclick="searchKeyword()">검색</button>
-            <button onclick="clearSearch()">초기화</button>
+        
+        <!-- 결과 컨테이너 -->
+        <div id="results-wrapper" class="results-wrapper">
+            <div class="results-layout">
+                <div id="results-main" class="results-main"></div>
+            </div>
         </div>
     </div>
-    
-    <div id="result"></div>
 
     <script>
-        function setSearchActive(isActive) {
-            const container = document.getElementById('main-container');
-            const section = document.querySelector('.search-section');
-            const box = document.querySelector('.search-box');
-            const header = document.getElementById('header');
-            const buttonGroup = document.getElementById('button-group');
-            
-            if (isActive) {
-                container.classList.add('search-active');
-                section.classList.add('search-active');
-                box.classList.add('search-active');
-                header.classList.add('search-active');
-                buttonGroup.classList.add('search-active');
-            } else {
-                container.classList.remove('search-active');
-                section.classList.remove('search-active');
-                box.classList.remove('search-active');
-                header.classList.remove('search-active');
-                buttonGroup.classList.remove('search-active');
-            }
+        let currentKeyword = '';
+        let allResults = [];
+        
+        function showHome() {
+            document.getElementById('home-screen').classList.remove('hidden');
+            document.getElementById('search-header').classList.remove('visible');
+            document.getElementById('results-wrapper').classList.remove('visible');
+            currentKeyword = '';
         }
         
-        function resetToHome() {
-            document.getElementById('keywordSearch').value = '';
-            document.getElementById('result').innerHTML = '';
-            document.getElementById('main-container').style.minHeight = 'calc(100vh - 60px)';
-            document.getElementById('main-container').style.justifyContent = 'center';
-            setSearchActive(false);
+        function goHome() {
+            showHome();
         }
         
-        function clearSearch() {
-            resetToHome();
+        function showResults() {
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('search-header').classList.add('visible');
+            document.getElementById('results-wrapper').classList.add('visible');
         }
         
-        async function searchKeyword() {
-            const kw = document.getElementById('keywordSearch').value.trim();
+        function homeSearch() {
+            const kw = document.getElementById('homeSearch').value.trim();
             if (!kw) {
                 alert('검색어를 입력하세요');
                 return;
             }
-            
-            setSearchActive(true);
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '<div class="no-results"><p>검색 중...</p></div>';
+            currentKeyword = kw;
+            document.getElementById('headerSearch').value = kw;
+            performSearch(kw);
+        }
+        
+        function luckySearch() {
+            const kw = document.getElementById('homeSearch').value.trim();
+            if (!kw) {
+                alert('검색어를 입력하세요');
+                return;
+            }
+            currentKeyword = kw;
+            performSearch(kw, true);
+        }
+        
+        async function performSearch(kw, lucky = false) {
+            showResults();
+            const resultDiv = document.getElementById('results-main');
+            resultDiv.innerHTML = '<div class="loading"><p>검색 중...</p></div>';
             
             try {
                 const resp = await fetch('/api/search_keyword', {
@@ -341,27 +395,14 @@
                 if (data.error) {
                     resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
                 } else if (data.results && data.results.length > 0) {
-                    let html = `<div class="results-container">`;
-                    html += `<div class="result-count">${data.results.length}개의 검색 결과</div>`;
+                    allResults = data.results;
                     
-                    data.results.forEach(item => {
-                        const urlObj = new URL(item.link);
-                        const displayUrl = urlObj.hostname + urlObj.pathname.split('/').slice(0, 3).join('/');
-                        
-                        html += `
-                            <div class="search-result">
-                                <div class="result-url">${displayUrl}</div>
-                                <div class="result-title">
-                                    <a href="${item.link}" target="_blank">${item.title}</a>
-                                </div>
-                                <div class="result-snippet">${item.snippet}</div>
-                                <div class="result-time">🕐 ${item.time_kst || 'N/A'}</div>
-                            </div>
-                        `;
-                    });
+                    if (lucky && data.results.length > 0) {
+                        window.location.href = data.results[0].link;
+                        return;
+                    }
                     
-                    html += `</div>`;
-                    resultDiv.innerHTML = html;
+                    displayResults(data.results);
                 } else {
                     resultDiv.innerHTML = '<div class="no-results"><h2>검색 결과가 없습니다</h2></div>';
                 }
@@ -370,11 +411,58 @@
             }
         }
         
+        function displayResults(results) {
+            const resultDiv = document.getElementById('results-main');
+            let html = `<div class="result-count">${results.length}개의 검색 결과</div>`;
+            
+            results.forEach(item => {
+                const urlObj = new URL(item.link);
+                const displayUrl = urlObj.hostname + urlObj.pathname.split('/').slice(0, 3).join('/');
+                
+                html += `
+                    <div class="search-result">
+                        <div class="result-url">${displayUrl}</div>
+                        <div class="result-title">
+                            <a href="${item.link}" target="_blank">${item.title}</a>
+                        </div>
+                        <div class="result-snippet">${item.snippet}</div>
+                        <div class="result-time">🕐 ${item.time_kst || 'N/A'}</div>
+                    </div>
+                `;
+            });
+            
+            resultDiv.innerHTML = html;
+        }
+        
         // Enter 키로 검색
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('keywordSearch').addEventListener('keypress', function(e) {
+            document.getElementById('homeSearch').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    searchKeyword();
+                    homeSearch();
+                }
+            });
+            
+            document.getElementById('headerSearch').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const kw = this.value.trim();
+                    if (kw) {
+                        currentKeyword = kw;
+                        performSearch(kw);
+                    }
+                }
+            });
+            
+            // 탭 클릭
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
                 }
             });
         });
