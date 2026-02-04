@@ -3,362 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>뉴스 검색</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        html {
-            scroll-behavior: smooth;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #fff;
-            color: #202124;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        /* 홈 스크린 */
-        .home-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            will-change: contents;
-        }
-        
-        .home-screen.hidden {
-            display: none;
-        }
-        
-        .home-logo {
-            font-size: 92px;
-            font-weight: 400;
-            margin-bottom: 30px;
-            line-height: 1;
-            color: #4285f4;
-        }
-        
-        .home-logo span { display: inline-block; }
-        .home-logo span:nth-child(1) { color: #4285f4; }
-        .home-logo span:nth-child(2) { color: #ea4335; }
-        .home-logo span:nth-child(3) { color: #fbbc04; }
-        .home-logo span:nth-child(4) { color: #4285f4; }
-        .home-logo span:nth-child(5) { color: #34a853; }
-        .home-logo span:nth-child(6) { color: #ea4335; }
-        
-        .home-search-box {
-            display: flex;
-            align-items: center;
-            height: 48px;
-            border: 1px solid #dadce0;
-            border-radius: 24px;
-            padding: 0 20px;
-            background: #fff;
-            width: 100%;
-            max-width: 584px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 5px 1px rgba(64, 60, 67, 0.16);
-            will-change: box-shadow;
-        }
-        
-        .home-search-box:focus-within {
-            box-shadow: 0 2px 5px 1px rgba(64, 60, 67, 0.16);
-        }
-        
-        .home-search-box input,
-        .header-search-box input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            padding: 0 10px;
-            background: transparent;
-            color: #202124;
-        }
-        
-        .header-search-box input {
-            font-size: 14px;
-        }
-        
-        .search-clear-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #9aa0a6;
-            font-size: 20px;
-            padding: 0 5px;
-            display: none;
-            line-height: 1;
-            transition: color 0.1s;
-        }
-        
-        .search-clear-btn:hover {
-            color: #202124;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fff; color: #202124; -webkit-font-smoothing: antialiased; }
+        .home-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .home-screen.hidden { display: none; }
+        .home-logo { font-size: 92px; font-weight: 400; margin-bottom: 30px; }
+        .home-logo span:nth-child(1) { color: #4285f4; } .home-logo span:nth-child(2) { color: #ea4335; } .home-logo span:nth-child(3) { color: #fbbc04; }
+        .home-logo span:nth-child(4) { color: #4285f4; } .home-logo span:nth-child(5) { color: #34a853; } .home-logo span:nth-child(6) { color: #ea4335; }
+        .home-search-box, .header-search-box { display: flex; align-items: center; border: 1px solid #dadce0; border-radius: 24px; padding: 0 20px; background: #fff; }
+        .home-search-box { height: 48px; width: 100%; max-width: 584px; margin-bottom: 30px; box-shadow: 0 2px 5px 1px rgba(64,60,67,.16); }
+        .header-search-box { height: 40px; flex: 1; max-width: 500px; box-shadow: 0 1px 6px rgba(32,33,36,.08); }
+        .header-search-box:focus-within { box-shadow: 0 1px 6px rgba(32,33,36,.28); }
+        input { flex: 1; border: none; outline: none; font-size: 16px; padding: 0 10px; background: transparent; color: #202124; }
+        .header-search-box input { font-size: 14px; }
+        .search-clear-btn { background: none; border: none; cursor: pointer; color: #9aa0a6; font-size: 20px; padding: 0 5px; display: none; }
+        .search-clear-btn:hover { color: #202124; }
         .home-search-box:has(input:not(:placeholder-shown)) .search-clear-btn,
-        .header-search-box:has(input:not(:placeholder-shown)) .search-clear-btn {
-            display: block;
-        }
-        
-        .home-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        
-        button {
-            padding: 10px 24px;
-            font-size: 14px;
-            font-weight: 500;
-            border: 1px solid #dadce0;
-            border-radius: 4px;
-            background: #f8f9fa;
-            color: #3c4043;
-            cursor: pointer;
-            transition: box-shadow 0.1s, background 0.1s;
-            will-change: auto;
-        }
-        
-        button:active {
-            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* 검색 결과 헤더 */
-        .search-header {
-            position: sticky;
-            top: 0;
-            background: #fff;
-            border-bottom: 1px solid #dadce0;
-            z-index: 100;
-            padding: 10px 20px;
-            display: none;
-            will-change: transform;
-        }
-        
-        .search-header.visible {
-            display: block;
-        }
-        
-        .header-top {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 10px 0;
-        }
-        
-        .header-logo {
-            font-size: 20px;
-            font-weight: 500;
-            color: #4285f4;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: opacity 0.1s;
-        }
-        
-        .header-search-box {
-            display: flex;
-            align-items: center;
-            height: 40px;
-            border: 1px solid #dadce0;
-            border-radius: 24px;
-            padding: 0 20px;
-            background: #fff;
-            flex: 1;
-            max-width: 500px;
-            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.08);
-            will-change: box-shadow;
-        }
-        
-        .header-search-box:focus-within {
-            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-        }
-        
-        /* 탭 */
-        .tabs {
-            display: none;
-            border-top: 1px solid #dadce0;
-            padding: 0 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .tabs.visible {
-            display: flex;
-            gap: 30px;
-        }
-        
-        .tab {
-            padding: 15px 0;
-            border-bottom: 3px solid transparent;
-            color: #70757a;
-            font-size: 14px;
-            cursor: pointer;
-            transition: color 0.1s;
-            background: none;
-            border: none;
-            margin: 0;
-            padding: 15px 0;
-            font-weight: 400;
-        }
-        
-        .tab.active {
-            color: #4285f4;
-            border-bottom-color: #4285f4;
-        }
-        
-        .tab:hover {
-            color: #202124;
-        }
-        
-        /* 결과 컨테이너 */
-        .results-wrapper {
-            display: none;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        .results-wrapper.visible {
-            display: block;
-        }
-        
-        .results-layout {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            padding: 20px 0;
-        }
-        
-        .results-main {
-            max-width: 750px;
-            contain: layout;
-        }
-        
-        .result-count {
-            font-size: 13px;
-            color: #70757a;
-            margin-bottom: 20px;
-        }
-        
-        .search-result {
-            margin-bottom: 26px;
-            padding-bottom: 0;
-        }
-        
-        .result-url {
-            font-size: 12px;
-            color: #006621;
-            margin-bottom: 2px;
-            word-break: break-word;
-        }
-        
-        .result-title {
-            font-size: 20px;
-            font-weight: 400;
-            line-height: 1.3;
-            margin-bottom: 8px;
-        }
-        
-        .result-title a {
-            color: #1f0dcc;
-            text-decoration: none;
-            cursor: pointer;
-            transition: color 0.1s;
-        }
-        
-        .result-title a:visited {
-            color: #681da8;
-        }
-        
-        .result-title a:active {
-            color: #1f0dcc;
-        }
-        
-        .result-snippet {
-            font-size: 14px;
-            line-height: 1.6;
-            color: #545454;
-            margin-bottom: 6px;
-            word-break: break-word;
-        }
-        
-        .result-time {
-            font-size: 13px;
-            color: #70757a;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .error {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 15px;
-            border-radius: 4px;
-            color: #856404;
-            margin: 20px 0;
-        }
-        
-        .no-results,
-        .loading {
-            text-align: center;
-            padding: 40px 20px;
-            color: #70757a;
-        }
-        
-        .no-results h2 {
-            color: #202124;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
+        .header-search-box:has(input:not(:placeholder-shown)) .search-clear-btn { display: block; }
+        .home-buttons { display: flex; gap: 10px; justify-content: center; }
+        button { padding: 10px 24px; font-size: 14px; font-weight: 500; border: 1px solid #dadce0; border-radius: 4px; background: #f8f9fa; color: #3c4043; cursor: pointer; }
+        button:active { box-shadow: 0 1px 1px rgba(0,0,0,.1); }
+        .search-header { position: sticky; top: 0; background: #fff; border-bottom: 1px solid #dadce0; z-index: 100; padding: 10px 20px; display: none; }
+        .search-header.visible { display: block; }
+        .header-top { display: flex; align-items: center; gap: 20px; max-width: 1200px; margin: 0 auto; padding: 10px 0; }
+        .header-logo { font-size: 20px; font-weight: 500; color: #4285f4; cursor: pointer; white-space: nowrap; }
+        .tabs { display: none; border-top: 1px solid #dadce0; padding: 0 20px; max-width: 1200px; margin: 0 auto; }
+        .tabs.visible { display: flex; gap: 30px; }
+        .tab { padding: 15px 0; border-bottom: 3px solid transparent; color: #70757a; font-size: 14px; cursor: pointer; background: none; border: none; margin: 0; font-weight: 400; }
+        .tab.active { color: #4285f4; border-bottom-color: #4285f4; }
+        .tab:hover { color: #202124; }
+        .results-wrapper { display: none; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .results-wrapper.visible { display: block; }
+        .results-layout { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 20px 0; }
+        .results-main { max-width: 750px; contain: layout; }
+        .result-count { font-size: 13px; color: #70757a; margin-bottom: 20px; }
+        .search-result { margin-bottom: 26px; }
+        .result-url { font-size: 12px; color: #006621; margin-bottom: 2px; word-break: break-word; }
+        .result-title { font-size: 20px; font-weight: 400; line-height: 1.3; margin-bottom: 8px; }
+        .result-title a { color: #1f0dcc; text-decoration: none; }
+        .result-title a:visited { color: #681da8; }
+        .result-snippet { font-size: 14px; line-height: 1.6; color: #545454; margin-bottom: 6px; word-break: break-word; }
+        .result-time { font-size: 13px; color: #70757a; display: flex; align-items: center; gap: 6px; }
+        .error { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 4px; color: #856404; margin: 20px 0; }
+        .no-results, .loading { text-align: center; padding: 40px 20px; color: #70757a; }
+        .no-results h2 { color: #202124; margin-bottom: 10px; font-size: 18px; }
     </style>
 </head>
 <body>
-    <!-- 홈 스크린 -->
     <div id="home-screen" class="home-screen">
-        <div class="home-logo">
-            <span>뉴</span><span>스</span><span>검</span><span>색</span>
-        </div>
+        <div class="home-logo"><span>뉴</span><span>스</span><span>검</span><span>색</span></div>
         <div class="home-search-box">
             <input type="text" id="homeSearch" placeholder="뉴스 검색" autocomplete="off" />
-            <button class="search-clear-btn" type="button" onclick="clearHomeSearch()">✕</button>
+            <button class="search-clear-btn" type="button" onclick="document.getElementById('homeSearch').value='';document.getElementById('homeSearch').focus();">✕</button>
         </div>
-        <div class="home-buttons">
-            <button type="button" onclick="homeSearch()">검색</button>
-        </div>
+        <div class="home-buttons"><button type="button" onclick="performHomeSearch()">검색</button></div>
     </div>
     
-    <!-- 검색 결과 -->
     <div id="search-results">
-        <!-- 헤더 -->
         <div id="search-header" class="search-header">
             <div class="header-top">
-                <div class="header-logo" onclick="goHome()">뉴스검색</div>
+                <div class="header-logo" onclick="location.reload()">뉴스검색</div>
                 <div class="header-search-box">
                     <input type="text" id="headerSearch" placeholder="뉴스 검색" autocomplete="off" />
-                    <button class="search-clear-btn" type="button" onclick="clearHeaderSearch()">✕</button>
+                    <button class="search-clear-btn" type="button" onclick="document.getElementById('headerSearch').value='';document.getElementById('headerSearch').focus();">✕</button>
                 </div>
             </div>
             <div id="tabs" class="tabs">
-                <button class="tab active" type="button" data-type="all">모든 뉴스</button>
-                <button class="tab" type="button" data-type="latest">최신</button>
-                <button class="tab" type="button" data-type="relevant">관련도순</button>
+                <button class="tab active" type="button">모든 뉴스</button>
+                <button class="tab" type="button">최신</button>
+                <button class="tab" type="button">관련도순</button>
             </div>
         </div>
         
-        <!-- 결과 컨테이너 -->
         <div id="results-wrapper" class="results-wrapper">
             <div class="results-layout">
                 <div id="results-main" class="results-main"></div>
@@ -367,627 +85,61 @@
     </div>
 
     <script>
-        // DOM 캐싱
-        const homeScreen = document.getElementById('home-screen');
-        const homeSearch = document.getElementById('homeSearch');
-        const headerSearch = document.getElementById('headerSearch');
-        const searchHeader = document.getElementById('search-header');
-        const resultsWrapper = document.getElementById('results-wrapper');
-        const resultsMain = document.getElementById('results-main');
-        const tabs = document.getElementById('tabs');
+        const $ = (id) => document.getElementById(id);
+        const homeSearch = $('homeSearch');
+        const headerSearch = $('headerSearch');
+        const searchHeader = $('search-header');
+        const resultsWrapper = $('results-wrapper');
+        const resultsMain = $('results-main');
+        const homeScreen = $('home-screen');
         
-        let currentKeyword = '';
-        let allResults = [];
-        let searchTimeout = null;
-        
-        function clearHomeSearch() {
-            homeSearch.value = '';
-            homeSearch.focus();
-        }
-        
-        function clearHeaderSearch() {
-            headerSearch.value = '';
-            headerSearch.focus();
-        }
-        
-        function showHome() {
-            homeScreen.classList.remove('hidden');
-            searchHeader.classList.remove('visible');
-            resultsWrapper.classList.remove('visible');
-            currentKeyword = '';
-        }
-        
-        function goHome() {
-            showHome();
-        }
-        
-        function showResults() {
+        function show() {
             homeScreen.classList.add('hidden');
             searchHeader.classList.add('visible');
             resultsWrapper.classList.add('visible');
         }
         
-        function performHomeSearch() {
+        function searchHome() {
             const kw = homeSearch.value.trim();
-            if (!kw) {
-                alert('검색어를 입력하세요');
-                return;
-            }
-            currentKeyword = kw;
+            if (!kw) return alert('검색어를 입력하세요');
             headerSearch.value = kw;
-            performSearch(kw);
+            search(kw);
         }
         
-        async function performSearch(kw) {
-            showResults();
+        async function search(kw) {
+            show();
             resultsMain.innerHTML = '<div class="loading"><p>검색 중...</p></div>';
-            
             try {
-                const resp = await fetch('/api/search_keyword', {
+                const res = await fetch('/api/search_keyword', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({keyword: kw})
                 });
-                const data = await resp.json();
-                
+                const data = await res.json();
                 if (data.error) {
                     resultsMain.innerHTML = `<div class="error">오류: ${data.error}</div>`;
-                } else if (data.results && data.results.length > 0) {
-                    allResults = data.results;
-                    displayResults(data.results);
+                } else if (data.results?.length) {
+                    let html = `<div class="result-count">${data.results.length}개의 검색 결과</div>`;
+                    data.results.forEach(item => {
+                        const url = new URL(item.link).hostname + new URL(item.link).pathname.split('/').slice(0,3).join('/');
+                        html += `<div class="search-result"><div class="result-url">${url}</div><div class="result-title"><a href="${item.link}" target="_blank">${item.title}</a></div><div class="result-snippet">${item.snippet}</div><div class="result-time">🕐 ${item.time_kst||'N/A'}</div></div>`;
+                    });
+                    resultsMain.innerHTML = html;
                 } else {
                     resultsMain.innerHTML = '<div class="no-results"><h2>검색 결과가 없습니다</h2></div>';
                 }
-            } catch (err) {
-                resultsMain.innerHTML = `<div class="error">요청 중 오류 발생: ${err.message}</div>`;
+            } catch (e) {
+                resultsMain.innerHTML = `<div class="error">요청 중 오류: ${e.message}</div>`;
             }
         }
         
-        function displayResults(results) {
-            let html = `<div class="result-count">${results.length}개의 검색 결과</div>`;
-            
-            const fragment = document.createDocumentFragment();
-            const resultDiv = document.createElement('div');
-            
-            results.forEach(item => {
-                try {
-                    const urlObj = new URL(item.link);
-                    const displayUrl = urlObj.hostname + urlObj.pathname.split('/').slice(0, 3).join('/');
-                    
-                    html += `
-                        <div class="search-result">
-                            <div class="result-url">${escapeHtml(displayUrl)}</div>
-                            <div class="result-title">
-                                <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>
-                            </div>
-                            <div class="result-snippet">${escapeHtml(item.snippet)}</div>
-                            <div class="result-time">🕐 ${escapeHtml(item.time_kst || 'N/A')}</div>
-                        </div>
-                    `;
-                } catch (e) {
-                    console.error('Error rendering result:', e);
-                }
-            });
-            
-            resultsMain.innerHTML = html;
-        }
-        
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        }
-        
-        // 이벤트 위임
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                if (e.target === homeSearch) {
-                    performHomeSearch();
-                } else if (e.target === headerSearch) {
-                    const kw = headerSearch.value.trim();
-                    if (kw) {
-                        currentKeyword = kw;
-                        performSearch(kw);
-                    }
-                }
-            }
-        });
-        
-        // 탭 클릭 위임
-        tabs.addEventListener('click', function(e) {
+        homeSearch.addEventListener('keypress', (e) => e.key === 'Enter' && searchHome());
+        headerSearch.addEventListener('keypress', (e) => e.key === 'Enter' && search(headerSearch.value.trim()));
+        $('tabs').addEventListener('click', (e) => {
             if (e.target.classList.contains('tab')) {
-                Array.from(tabs.querySelectorAll('.tab')).forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 e.target.classList.add('active');
             }
-        });
-    </script>
-</body>
-</html>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #fff;
-            color: #202124;
-        }
-        
-        /* 홈 스크린 */
-        .home-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .home-screen.hidden {
-            display: none;
-        }
-        
-        .home-logo {
-            font-size: 92px;
-            font-weight: 400;
-            margin-bottom: 30px;
-            color: #4285f4;
-        }
-        
-        .home-logo span:nth-child(1) { color: #4285f4; }
-        .home-logo span:nth-child(2) { color: #ea4335; }
-        .home-logo span:nth-child(3) { color: #fbbc04; }
-        .home-logo span:nth-child(4) { color: #4285f4; }
-        .home-logo span:nth-child(5) { color: #34a853; }
-        .home-logo span:nth-child(6) { color: #ea4335; }
-        
-        .home-search-box {
-            display: flex;
-            align-items: center;
-            height: 48px;
-            border: 1px solid #dadce0;
-            border-radius: 24px;
-            padding: 0 20px;
-            background: #fff;
-            transition: all 0.2s ease;
-            width: 100%;
-            max-width: 584px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 5px 1px rgba(64, 60, 67, 0.16);
-        }
-        
-        .home-search-box:hover {
-            box-shadow: 0 2px 5px 1px rgba(64, 60, 67, 0.16);
-        }
-        
-        .home-search-box:focus-within {
-            box-shadow: 0 2px 5px 1px rgba(64, 60, 67, 0.16);
-        }
-        
-        .home-search-box input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            padding: 0 10px;
-            background: transparent;
-            color: #202124;
-        }
-        
-        .search-clear-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #9aa0a6;
-            font-size: 20px;
-            padding: 0 5px;
-            display: none;
-        }
-        
-        .search-clear-btn:hover {
-            color: #202124;
-            box-shadow: none;
-        }
-        
-        .home-search-box:has(input:not(:placeholder-shown)) .search-clear-btn,
-        .header-search-box:has(input:not(:placeholder-shown)) .search-clear-btn {
-            display: block;
-        }
-        
-        .home-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        
-        .home-buttons button {
-            padding: 10px 24px;
-            font-size: 14px;
-            font-weight: 500;
-            border: 1px solid #dadce0;
-            border-radius: 4px;
-            background: #f8f9fa;
-            color: #3c4043;
-            cursor: pointer;
-            transition: all 0.1s ease;
-        }
-        
-        .home-buttons button:hover {
-            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-            background: #f8f9fa;
-            border-color: #dadce0;
-        }
-        
-        /* 검색 결과 헤더 */
-        .search-header {
-            position: sticky;
-            top: 0;
-            background: #fff;
-            border-bottom: 1px solid #dadce0;
-            z-index: 100;
-            padding: 10px 20px;
-            display: none;
-        }
-        
-        .search-header.visible {
-            display: block;
-        }
-        
-        .header-top {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 10px 0;
-        }
-        
-        .header-logo {
-            font-size: 20px;
-            font-weight: 500;
-            color: #4285f4;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        
-        .header-search-box {
-            display: flex;
-            align-items: center;
-            height: 40px;
-            border: 1px solid #dadce0;
-            border-radius: 24px;
-            padding: 0 20px;
-            background: #fff;
-            flex: 1;
-            max-width: 500px;
-            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.08);
-        }
-        
-        .header-search-box:focus-within {
-            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-        }
-        
-        .header-search-box input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 14px;
-            padding: 0 10px;
-            background: transparent;
-            color: #202124;
-        }
-        
-        /* 탭 */
-        .tabs {
-            display: none;
-            border-top: 1px solid #dadce0;
-            padding: 0 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .tabs.visible {
-            display: flex;
-            gap: 30px;
-        }
-        
-        .tab {
-            padding: 15px 0;
-            border-bottom: 3px solid transparent;
-            color: #70757a;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .tab.active {
-            color: #4285f4;
-            border-bottom-color: #4285f4;
-        }
-        
-        .tab:hover {
-            color: #202124;
-        }
-        
-        /* 결과 컨테이너 */
-        .results-wrapper {
-            display: none;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        .results-wrapper.visible {
-            display: block;
-        }
-        
-        .results-layout {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            padding: 20px 0;
-        }
-        
-        .results-main {
-            max-width: 750px;
-        }
-        
-        .result-count {
-            font-size: 13px;
-            color: #70757a;
-            margin-bottom: 20px;
-        }
-        
-        .search-result {
-            margin-bottom: 26px;
-            padding-bottom: 0;
-        }
-        
-        .result-url {
-            font-size: 12px;
-            color: #006621;
-            margin-bottom: 2px;
-        }
-        
-        .result-title {
-            font-size: 20px;
-            font-weight: 400;
-            line-height: 1.3;
-            margin-bottom: 8px;
-        }
-        
-        .result-title a {
-            color: #1f0dcc;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        
-        .result-title a:visited {
-            color: #681da8;
-        }
-        
-        .result-title a:hover {
-            text-decoration: underline;
-        }
-        
-        .result-snippet {
-            font-size: 14px;
-            line-height: 1.6;
-            color: #545454;
-            margin-bottom: 6px;
-        }
-        
-        .result-time {
-            font-size: 13px;
-            color: #70757a;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .error {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 15px;
-            border-radius: 4px;
-            color: #856404;
-            margin: 20px 0;
-        }
-        
-        .no-results {
-            text-align: center;
-            padding: 40px 20px;
-            color: #70757a;
-        }
-        
-        .no-results h2 {
-            color: #202124;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px 20px;
-            color: #70757a;
-        }
-    </style>
-</head>
-<body>
-    <!-- 홈 스크린 -->
-    <div id="home-screen" class="home-screen">
-        <div class="home-logo">
-            <span>뉴</span><span>스</span><span>검</span><span>색</span>
-        </div>
-        <div class="home-search-box">
-            <input type="text" id="homeSearch" placeholder="뉴스 검색" />
-            <button class="search-clear-btn" onclick="clearHomeSearch()">✕</button>
-        </div>
-        <div class="home-buttons">
-            <button onclick="homeSearch()">검색</button>
-        </div>
-    </div>
-    
-    <!-- 검색 결과 -->
-    <div id="search-results">
-        <!-- 헤더 -->
-        <div id="search-header" class="search-header">
-            <div class="header-top">
-                <div class="header-logo" onclick="goHome()">뉴스검색</div>
-                <div class="header-search-box">
-                    <input type="text" id="headerSearch" placeholder="뉴스 검색" />
-                    <button class="search-clear-btn" onclick="clearHeaderSearch()">✕</button>
-                </div>
-            </div>
-            <div id="tabs" class="tabs">
-                <div class="tab active" data-type="all">모든 뉴스</div>
-                <div class="tab" data-type="latest">최신</div>
-                <div class="tab" data-type="relevant">관련도순</div>
-            </div>
-        </div>
-        
-        <!-- 결과 컨테이너 -->
-        <div id="results-wrapper" class="results-wrapper">
-            <div class="results-layout">
-                <div id="results-main" class="results-main"></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let currentKeyword = '';
-        let allResults = [];
-        
-        function clearHomeSearch() {
-            document.getElementById('homeSearch').value = '';
-            document.getElementById('homeSearch').focus();
-        }
-        
-        function clearHeaderSearch() {
-            document.getElementById('headerSearch').value = '';
-            document.getElementById('headerSearch').focus();
-        }
-        
-        function showHome() {
-            document.getElementById('home-screen').classList.remove('hidden');
-            document.getElementById('search-header').classList.remove('visible');
-            document.getElementById('results-wrapper').classList.remove('visible');
-            currentKeyword = '';
-        }
-        
-        function goHome() {
-            showHome();
-        }
-        
-        function showResults() {
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('search-header').classList.add('visible');
-            document.getElementById('results-wrapper').classList.add('visible');
-        }
-        
-        function homeSearch() {
-            const kw = document.getElementById('homeSearch').value.trim();
-            if (!kw) {
-                alert('검색어를 입력하세요');
-                return;
-            }
-            currentKeyword = kw;
-            document.getElementById('headerSearch').value = kw;
-            performSearch(kw);
-        }
-        
-        function luckySearch() {
-            // 삭제됨
-        }
-        
-        async function performSearch(kw, lucky = false) {
-            showResults();
-            const resultDiv = document.getElementById('results-main');
-            resultDiv.innerHTML = '<div class="loading"><p>검색 중...</p></div>';
-            
-            try {
-                const resp = await fetch('/api/search_keyword', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({keyword: kw})
-                });
-                const data = await resp.json();
-                
-                if (data.error) {
-                    resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
-                } else if (data.results && data.results.length > 0) {
-                    allResults = data.results;
-                    
-                    if (lucky && data.results.length > 0) {
-                        window.location.href = data.results[0].link;
-                        return;
-                    }
-                    
-                    displayResults(data.results);
-                } else {
-                    resultDiv.innerHTML = '<div class="no-results"><h2>검색 결과가 없습니다</h2></div>';
-                }
-            } catch (err) {
-                resultDiv.innerHTML = `<div class="error">요청 중 오류 발생: ${err.message}</div>`;
-            }
-        }
-        
-        function displayResults(results) {
-            const resultDiv = document.getElementById('results-main');
-            let html = `<div class="result-count">${results.length}개의 검색 결과</div>`;
-            
-            results.forEach(item => {
-                const urlObj = new URL(item.link);
-                const displayUrl = urlObj.hostname + urlObj.pathname.split('/').slice(0, 3).join('/');
-                
-                html += `
-                    <div class="search-result">
-                        <div class="result-url">${displayUrl}</div>
-                        <div class="result-title">
-                            <a href="${item.link}" target="_blank">${item.title}</a>
-                        </div>
-                        <div class="result-snippet">${item.snippet}</div>
-                        <div class="result-time">🕐 ${item.time_kst || 'N/A'}</div>
-                    </div>
-                `;
-            });
-            
-            resultDiv.innerHTML = html;
-        }
-        
-        // Enter 키로 검색
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('homeSearch').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    homeSearch();
-                }
-            });
-            
-            document.getElementById('headerSearch').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    const kw = this.value.trim();
-                    if (kw) {
-                        currentKeyword = kw;
-                        performSearch(kw);
-                    }
-                }
-            });
-            
-            // 탭 클릭
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
         });
     </script>
 </body>
