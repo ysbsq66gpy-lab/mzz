@@ -10,50 +10,55 @@ import os
 from email.utils import parsedate_to_datetime
 from datetime import datetime
 import pytz
-from bs4 import BeautifulSoup
-import time
+import asyncio
+import aiohttp
+import concurrent.futures
 
 app = Flask(__name__, template_folder='templates')
 
-def extract_image_from_url(url):
-    """Extract main image from news article URL"""
+def extract_image_from_url_simple(url):
+    """Quick image extraction using only meta tags without full page load"""
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8'
         }
         
-        resp = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+        # Only fetch first 50KB to save time
+        resp = requests.get(url, headers=headers, timeout=5, stream=True)
         resp.raise_for_status()
         
-        soup = BeautifulSoup(resp.content, 'html.parser')
+        content = ''
+        for chunk in resp.iter_content(chunk_size=1024, decode_unicode=True):
+            content += chunk if isinstance(chunk, str) else chunk.decode('utf-8', errors='ignore')
+            if len(content) > 50000:  # Stop after 50KB
+                break
+            if '</head>' in content:  # Stop after head section
+                break
         
-        # Try multiple image selectors
-        image_selectors = [
-            'meta[property="og:image"]',
-            'meta[name="og:image"]',
-            'meta[property="twitter:image"]',
-            'meta[name="twitter:image"]',
-            'img[src*="jpg"], img[src*="jpeg"], img[src*="png"], img[src*="webp"]'
-        ]
+        # Look for Open Graph and Twitter images
+        og_match = re.search(r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']', content, re.IGNORECASE)
+        if og_match:
+            img_url = og_match.group(1)
+            if img_url.startswith('http'):
+                return img_url
+            elif img_url.startswith('//'):
+                return 'https:' + img_url
+            elif img_url.startswith('/'):
+                base_url = '/'.join(url.split('/')[:3])
+                return base_url + img_url
         
-        for selector in image_selectors:
-            if selector.startswith('meta'):
-                meta = soup.select_one(selector)
-                if meta and meta.get('content'):
-                    img_url = meta['content']
-                    if img_url.startswith('http'):
-                        return img_url
-            else:
-                img = soup.select_one(selector)
-                if img and img.get('src'):
-                    img_url = img['src']
-                    if img_url.startswith('http'):
-                        return img_url
-                    elif img_url.startswith('//'):
-                        return 'https:' + img_url
-                    elif img_url.startswith('/'):
-                        base_url = '/'.join(url.split('/')[:3])
-                        return base_url + img_url
+        twitter_match = re.search(r'<meta[^>]*name=["\']twitter:image["\'][^>]*content=["\']([^"\']+)["\']', content, re.IGNORECASE)
+        if twitter_match:
+            img_url = twitter_match.group(1)
+            if img_url.startswith('http'):
+                return img_url
+            elif img_url.startswith('//'):
+                return 'https:' + img_url
+            elif img_url.startswith('/'):
+                base_url = '/'.join(url.split('/')[:3])
+                return base_url + img_url
         
         return ''
     except Exception as e:
@@ -86,7 +91,7 @@ def search_keyword():
         items = []
         
         for i, item in enumerate(root.iter('item')):
-            if i >= 10:  # Limit to 10 results for performance
+            if i >= 5:  # Limit to 5 results for speed
                 break
                 
             title_el = item.find('title')
@@ -103,11 +108,10 @@ def search_keyword():
             
             pub = pub_el.text if pub_el is not None else ''
             
-            # Extract image from the actual news article
+            # Extract image from the actual news article (non-blocking)
             image_url = ''
             if link:
-                image_url = extract_image_from_url(link)
-                time.sleep(0.5)  # Rate limiting
+                image_url = extract_image_from_url_simple(link)
             
             items.append({'title': title, 'link': link, 'snippet': desc_text, 'time': pub, 'image': image_url})
         
