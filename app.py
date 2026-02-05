@@ -10,8 +10,55 @@ import os
 from email.utils import parsedate_to_datetime
 from datetime import datetime
 import pytz
+from bs4 import BeautifulSoup
+import time
 
 app = Flask(__name__, template_folder='templates')
+
+def extract_image_from_url(url):
+    """Extract main image from news article URL"""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        resp = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+        resp.raise_for_status()
+        
+        soup = BeautifulSoup(resp.content, 'html.parser')
+        
+        # Try multiple image selectors
+        image_selectors = [
+            'meta[property="og:image"]',
+            'meta[name="og:image"]',
+            'meta[property="twitter:image"]',
+            'meta[name="twitter:image"]',
+            'img[src*="jpg"], img[src*="jpeg"], img[src*="png"], img[src*="webp"]'
+        ]
+        
+        for selector in image_selectors:
+            if selector.startswith('meta'):
+                meta = soup.select_one(selector)
+                if meta and meta.get('content'):
+                    img_url = meta['content']
+                    if img_url.startswith('http'):
+                        return img_url
+            else:
+                img = soup.select_one(selector)
+                if img and img.get('src'):
+                    img_url = img['src']
+                    if img_url.startswith('http'):
+                        return img_url
+                    elif img_url.startswith('//'):
+                        return 'https:' + img_url
+                    elif img_url.startswith('/'):
+                        base_url = '/'.join(url.split('/')[:3])
+                        return base_url + img_url
+        
+        return ''
+    except Exception as e:
+        print(f"Error extracting image from {url}: {e}")
+        return ''
 
 @app.route('/')
 def index():
@@ -38,7 +85,10 @@ def search_keyword():
         root = ET.fromstring(resp.content)
         items = []
         
-        for item in root.iter('item'):
+        for i, item in enumerate(root.iter('item')):
+            if i >= 10:  # Limit to 10 results for performance
+                break
+                
             title_el = item.find('title')
             link_el = item.find('link')
             desc_el = item.find('description')
@@ -51,12 +101,15 @@ def search_keyword():
             desc = desc_el.text if desc_el is not None else ''
             desc_text = re.sub(r'<[^>]+>', '', desc)
             
-            # Extract image from description HTML
-            img_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', desc)
-            img_url = img_match.group(1) if img_match else ''
-            
             pub = pub_el.text if pub_el is not None else ''
-            items.append({'title': title, 'link': link, 'snippet': desc_text, 'time': pub, 'image': img_url})
+            
+            # Extract image from the actual news article
+            image_url = ''
+            if link:
+                image_url = extract_image_from_url(link)
+                time.sleep(0.5)  # Rate limiting
+            
+            items.append({'title': title, 'link': link, 'snippet': desc_text, 'time': pub, 'image': image_url})
         
         # Helper function to parse RFC 2822 date
         def _parse_time(t):

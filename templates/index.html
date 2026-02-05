@@ -124,7 +124,7 @@
                     let html = `<div class="result-count">${data.results.length}개의 검색 결과</div>`;
                     data.results.forEach(item => {
                         const url = new URL(item.link).hostname + new URL(item.link).pathname.split('/').slice(0,3).join('/');
-                        const img = `<img class="result-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80'%3E%3Crect fill='%23e0e0e0' width='120' height='80'/%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23999'%3ENews%3C/text%3E%3C/svg%3E" alt="뉴스 이미지" loading="lazy" />`;
+                        const img = item.image ? `<img class="result-image" src="${item.image}" alt="뉴스 이미지" loading="lazy" />` : `<img class="result-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80'%3E%3Crect fill='%23e0e0e0' width='120' height='80'/%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23999'%3ENews%3C/text%3E%3C/svg%3E" alt="뉴스 이미지" loading="lazy" />`;
                         html += `<div class="search-result"><div class="result-content"><div class="result-url">${url}</div><div class="result-title"><a href="${item.link}" target="_blank">${item.title}</a></div><div class="result-snippet">${item.snippet}</div><div class="result-time">🕐 ${item.time_kst||'N/A'}</div></div>${img}</div>`;
                     });
                     resultsMain.innerHTML = html;
