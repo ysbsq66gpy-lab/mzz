@@ -27,26 +27,52 @@ python app.py
 
 서버는 http://localhost:5005 에서 실행됩니다.
 
-## Railway 배포
+## 자동 배포
 
-### 1단계: GitHub에 코드 푸시
+### 방법 1: 배포 스크립트 사용 (권장)
+
+가장 간단한 방법입니다. 한 번의 명령으로 테스트, 커밋, 푸시를 모두 실행합니다.
 
 ```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/YOUR_USERNAME/your-repo.git
-git push -u origin main
+# 배포 스크립트 실행
+./deploy.sh "커밋 메시지"
 ```
 
-### 2단계: Railway에서 배포
+스크립트가 자동으로:
+1. ✓ Python 문법 검사
+2. ✓ Git 변경사항 커밋
+3. ✓ GitHub에 푸시
+4. ✓ GitHub Actions 트리거 (자동 테스트)
+5. ✓ Railway 자동 배포 (연동 시)
+
+### 방법 2: Railway GitHub 연동
+
+Railway에서 GitHub 저장소를 연결하면 `main` 브랜치에 푸시할 때마다 자동으로 배포됩니다.
+
+**설정 방법:**
 
 1. [railway.app](https://railway.app)에 접속
 2. GitHub 계정으로 로그인
 3. "New Project" 클릭
 4. "Deploy from GitHub repo" 선택
-5. 저장소 선택
+5. `ysbsq66gpy-lab/mzz` 저장소 선택
 6. 자동으로 배포됨
+
+**이후 배포:**
+```bash
+# 코드 수정 후
+./deploy.sh "기능 추가"
+# Railway가 자동으로 배포합니다!
+```
+
+### 방법 3: 수동 배포
+
+```bash
+# 변경사항 커밋
+git add .
+git commit -m "커밋 메시지"
+git push origin main
+```
 
 배포된 URL은 Railway 대시보드에서 확인할 수 있습니다.
 

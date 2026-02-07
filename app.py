@@ -10,9 +10,6 @@ import os
 from email.utils import parsedate_to_datetime
 from datetime import datetime
 import pytz
-import asyncio
-import aiohttp
-import concurrent.futures
 
 app = Flask(__name__, template_folder='templates')
 
