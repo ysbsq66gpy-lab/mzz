@@ -99,16 +99,24 @@ def search_keyword():
             title = title_el.text if title_el is not None else ''
             link = link_el.text if link_el is not None else ''
             
-            # Remove HTML tags from description
+            # Extract real news URL from description HTML
+            real_url = link
             desc = desc_el.text if desc_el is not None else ''
+            if desc:
+                # Extract first URL from description (actual news site URL)
+                url_match = re.search(r'href="(https?://[^"]+)"', desc)
+                if url_match:
+                    real_url = url_match.group(1)
+            
+            # Remove HTML tags from description
             desc_text = re.sub(r'<[^>]+>', '', desc)
             
             pub = pub_el.text if pub_el is not None else ''
             
             # Extract image from the actual news article (non-blocking)
             image_url = ''
-            if link:
-                image_url = extract_image_from_url_simple(link)
+            if real_url:
+                image_url = extract_image_from_url_simple(real_url)
             
             items.append({'title': title, 'link': link, 'snippet': desc_text, 'time': pub, 'image': image_url})
         
