@@ -13,130 +13,6 @@ import pytz
 
 app = Flask(__name__, template_folder='templates')
 
-def get_real_url_from_google_news(google_url):
-    """Follow Google News redirect to get actual news site URL with better session handling"""
-    if not google_url or 'news.google.com' not in google_url:
-        return google_url
-        
-    session = requests.Session()
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Referer': 'https://news.google.com/',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
-    }
-    
-    try:
-        # Use GET with stream=True to get headers without downloading full body immediately
-        resp = session.get(google_url, headers=headers, allow_redirects=True, timeout=7, stream=True)
-        final_url = resp.url
-        
-        # Check if we are still on Google News
-        if 'news.google.com' in final_url and 'articles/' in google_url:
-            # Sometimes Google returns a 200 with a JS/meta-refresh redirect instead of 302
-            # Let's check a bit of content
-            content_sample = ''
-            for chunk in resp.iter_content(chunk_size=4096, decode_unicode=True):
-                if isinstance(chunk, str):
-                    content_sample += chunk
-                else:
-                    content_sample += chunk.decode('utf-8', errors='ignore')
-                if len(content_sample) > 20000:
-                    break
-            
-            # Look for common redirect patterns in body
-            match = re.search(r'window\.location\.replace\(["\'](https?://[^"\']+)["\']\)', content_sample)
-            if not match:
-                match = re.search(r'url=(https?://[^"\']+)["\']', content_sample, re.IGNORECASE)
-            if not match:
-                match = re.search(r'href=["\'](https?://[^"\']+)["\']', content_sample)
-                # Filter out google links
-                if match and 'google.com' in match.group(1):
-                    match = None
-            
-            if match:
-                final_url = match.group(1)
-                
-        return final_url
-    except Exception as e:
-        print(f"Error following redirect from {google_url}: {e}")
-        return google_url
-
-def extract_image_from_url_simple(url):
-    """Quick image extraction using only meta tags without full page load"""
-    if not url or 'news.google.com' in url:
-        return ''
-        
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Referer': 'https://www.google.com/'
-        }
-        
-        # Increase timeout and fetch bit more content
-        resp = requests.get(url, headers=headers, timeout=8, stream=True)
-        resp.raise_for_status()
-        
-        content = ''
-        for chunk in resp.iter_content(chunk_size=4096, decode_unicode=True):
-            if isinstance(chunk, str):
-                content += chunk
-            else:
-                try:
-                    content += chunk.decode('utf-8', errors='ignore')
-                except:
-                    pass
-            if len(content) > 150000: # 150KB
-                break
-            if '</head>' in content:
-                break
-        
-        # Comprehensive list of image meta tags and order of priority
-        patterns = [
-            r'<meta[^>]*property=["\']og:image:secure_url["\'][^>]*content=["\']([^"\']+)["\']',
-            r'<meta[^>]*content=["\']([^"\']+)["\'][^>]*property=["\']og:image:secure_url["\']',
-            r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']',
-            r'<meta[^>]*content=["\']([^"\']+)["\'][^>]*property=["\']og:image["\']',
-            r'<meta[^>]*name=["\']twitter:image["\'][^>]*content=["\']([^"\']+)["\']',
-            r'<meta[^>]*content=["\']([^"\']+)["\'][^>]*name=["\']twitter:image["\']',
-            r'<link[^>]*rel=["\']image_src["\'][^>]*href=["\']([^"\']+)["\']',
-            r'<link[^>]*href=["\']([^"\']+)["\'][^>]*rel=["\']image_src["\']',
-            r'<meta[^>]*itemprop=["\']image["\'][^>]*content=["\']([^"\']+)["\']'
-        ]
-        
-        from html import unescape
-        
-        for p in patterns:
-            match = re.search(p, content, re.IGNORECASE)
-            if match:
-                img_url = match.group(1).strip()
-                img_url = unescape(img_url)
-                
-                if img_url.startswith('http'):
-                    return img_url
-                elif img_url.startswith('//'):
-                    return 'https:' + img_url
-                elif img_url.startswith('/'):
-                    base_url = '/'.join(url.split('/')[:3])
-                    return base_url + img_url
-        
-        # Specific selectors for common news sites if meta tags fail
-        # This is very limited but can help
-        if 'yna.co.kr' in url: # Yonhap News
-            match = re.search(r'class="img-con">.*?src="(.*?)"', content, re.S)
-            if match:
-                return 'https:' + match.group(1) if match.group(1).startswith('//') else match.group(1)
-
-        return ''
-    except Exception as e:
-        print(f"Error extracting image from {url}: {e}")
-        return ''
-
 @app.route('/')
 def index():
     return send_from_directory('templates', 'index.html')
@@ -163,7 +39,7 @@ def search_keyword():
         items = []
         
         for i, item in enumerate(root.iter('item')):
-            if i >= 6:  # Slightly increase limit for more coverage
+            if i >= 20:  # Increase to 20 items
                 break
                 
             title_el = item.find('title')
@@ -180,21 +56,11 @@ def search_keyword():
             
             pub = pub_el.text if pub_el is not None else ''
             
-            # Follow Google News redirect to get real URL
-            real_url = get_real_url_from_google_news(link) if link else ''
-            
-            # Extract image from the actual news article
-            image_url = ''
-            if real_url and not real_url.startswith('https://news.google.com'):
-                image_url = extract_image_from_url_simple(real_url)
-            
             items.append({
                 'title': title, 
                 'link': link, 
-                'real_link': real_url,
                 'snippet': desc_text, 
-                'time': pub, 
-                'image': image_url
+                'time': pub
             })
         
         # Helper function to parse RFC 2822 date
