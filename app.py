@@ -13,6 +13,16 @@ import pytz
 
 app = Flask(__name__, template_folder='templates')
 
+def get_real_url_from_google_news(google_url):
+    """Follow Google News redirect to get actual news site URL"""
+    try:
+        # Follow redirects to get final URL
+        resp = requests.head(google_url, allow_redirects=True, timeout=3)
+        return resp.url
+    except Exception as e:
+        print(f"Error following redirect from {google_url}: {e}")
+        return google_url
+
 def extract_image_from_url_simple(url):
     """Quick image extraction using only meta tags without full page load"""
     try:
@@ -99,23 +109,18 @@ def search_keyword():
             title = title_el.text if title_el is not None else ''
             link = link_el.text if link_el is not None else ''
             
-            # Extract real news URL from description HTML
-            real_url = link
-            desc = desc_el.text if desc_el is not None else ''
-            if desc:
-                # Extract first URL from description (actual news site URL)
-                url_match = re.search(r'href="(https?://[^"]+)"', desc)
-                if url_match:
-                    real_url = url_match.group(1)
-            
             # Remove HTML tags from description
+            desc = desc_el.text if desc_el is not None else ''
             desc_text = re.sub(r'<[^>]+>', '', desc)
             
             pub = pub_el.text if pub_el is not None else ''
             
-            # Extract image from the actual news article (non-blocking)
+            # Follow Google News redirect to get real URL
+            real_url = get_real_url_from_google_news(link) if link else ''
+            
+            # Extract image from the actual news article
             image_url = ''
-            if real_url:
+            if real_url and not real_url.startswith('https://news.google.com'):
                 image_url = extract_image_from_url_simple(real_url)
             
             items.append({'title': title, 'link': link, 'snippet': desc_text, 'time': pub, 'image': image_url})
