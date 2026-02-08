@@ -137,10 +137,18 @@ def ai_analyze():
         JSON 형식 외에 다른 말은 절대 하지 마세요.
         """
 
-        # Try multiple models in order of preference
-        models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+        # Try multiple models in order of preference (using full names from debug info)
+        models_to_try = [
+            'models/gemini-1.5-flash',
+            'models/gemini-1.5-flash-latest',
+            'models/gemini-1.5-pro',
+            'models/gemini-1.5-pro-latest',
+            'models/gemini-pro',
+            'models/gemini-1.0-pro'
+        ]
+        
         analysis_result = None
-        last_error = ""
+        error_logs = []
 
         for model_name in models_to_try:
             try:
@@ -155,14 +163,17 @@ def ai_analyze():
                     print(f"DEBUG: Successfully got response from {model_name}")
                     break
             except Exception as e:
-                print(f"DEBUG: Model {model_name} failed: {e}")
-                last_error = str(e)
+                error_msg = f"Model {model_name} failed: {str(e)}"
+                print(f"DEBUG: {error_msg}")
+                error_logs.append(error_msg)
                 continue
         
         if analysis_result:
             return jsonify(analysis_result)
         else:
-            raise Exception(f"모든 AI 모델이 실패했습니다. 마지막 에러: {last_error}")
+            # Join all errors for debugging
+            all_errors = "\n".join(error_logs)
+            raise Exception(f"모든 AI 모델이 실패했습니다. 시도한 모델들의 에러 내역:\n{all_errors}")
 
     except Exception as e:
         import traceback
