@@ -114,26 +114,6 @@ def ai_analyze():
     try:
         genai.configure(api_key=api_key)
         
-        # Try multiple models in order of preference
-        models_to_try = ['gemini-1.5-flash', 'gemini-pro']
-        model = None
-        last_error = None
-
-        for model_name in models_to_try:
-            try:
-                print(f"DEBUG: Attempting AI analysis with {model_name}...")
-                temp_model = genai.GenerativeModel(model_name)
-                # Validation check
-                model = temp_model
-                break
-            except Exception as e:
-                print(f"DEBUG: Model {model_name} failed: {e}")
-                last_error = e
-                continue
-        
-        if not model:
-            raise Exception(f"사용 가능한 AI 모델이 없습니다. 마지막 에러: {last_error}")
-
         # Prepare content for AI (limit to top 10 for tokens and speed)
         content = "\n".join([f"- 제목: {item['title']}\n  요약: {item['snippet']}" for item in items[:10]])
         
@@ -156,17 +136,34 @@ def ai_analyze():
         }}
         JSON 형식 외에 다른 말은 절대 하지 마세요.
         """
-        
-        response = model.generate_content(prompt)
-        
-        if not response or not response.text:
-            raise Exception("AI로부터 유효한 응답을 받지 못했습니다.")
 
-        # Clean response text
-        json_str = response.text.replace('```json', '').replace('```', '').strip()
-        analysis = json.loads(json_str)
+        # Try multiple models in order of preference
+        models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+        analysis_result = None
+        last_error = ""
+
+        for model_name in models_to_try:
+            try:
+                print(f"DEBUG: Attempting AI analysis with {model_name}...")
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(prompt)
+                
+                if response and response.text:
+                    # Clean response text
+                    json_str = response.text.replace('```json', '').replace('```', '').strip()
+                    analysis_result = json.loads(json_str)
+                    print(f"DEBUG: Successfully got response from {model_name}")
+                    break
+            except Exception as e:
+                print(f"DEBUG: Model {model_name} failed: {e}")
+                last_error = str(e)
+                continue
         
-        return jsonify(analysis)
+        if analysis_result:
+            return jsonify(analysis_result)
+        else:
+            raise Exception(f"모든 AI 모델이 실패했습니다. 마지막 에러: {last_error}")
+
     except Exception as e:
         import traceback
         error_msg = traceback.format_exc()
