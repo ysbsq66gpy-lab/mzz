@@ -2,6 +2,10 @@
 
 Google처럼 디자인된 뉴스 키워드 검색 애플리케이션입니다.
 
+## 🔗 사이트 바로가기
+- **배포 주소**: [https://web-production-171e62.up.railway.app/](https://web-production-171e62.up.railway.app/)
+
+
 ## 기능
 
 - Google News RSS에서 키워드 검색
