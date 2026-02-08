@@ -3,3 +3,5 @@ requests==2.32.5
 pytz==2024.1
 beautifulsoup4==4.12.2
 gunicorn==21.2.0
+google-generativeai
+python-dotenv

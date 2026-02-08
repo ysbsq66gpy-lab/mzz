@@ -142,6 +142,131 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* AI Briefing Styles */
+        .ai-briefing {
+            background: #f8faff;
+            border: 2px solid #e8f0fe;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            display: none;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.08);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-title {
+            color: #1a73e8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .ai-section {
+            margin-bottom: 18px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eff2f7;
+        }
+
+        .ai-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .ai-label {
+            font-weight: 600;
+            color: #5f6368;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ai-content {
+            font-size: 1rem;
+            color: #3c4043;
+            line-height: 1.6;
+        }
+
+        .ai-summary-list {
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+
+        .ai-summary-list li {
+            margin-bottom: 6px;
+        }
+
+        .keyword-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .keyword-tag {
+            background: #e8f0fe;
+            color: #1967d2;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .ai-btn-container {
+            text-align: center;
+            margin: 20px 0 30px;
+            display: none;
+        }
+
+        .ai-btn {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
+        }
+
+        .ai-btn:active {
+            transform: scale(0.95);
+        }
+
+        .ai-btn:disabled {
+            background: #dadce0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
     </style>
 </head>
 
@@ -157,11 +282,45 @@
         </header>
 
         <div id="loading" class="spinner"></div>
+
+        <!-- AI Briefing Section -->
+        <div id="ai-btn-container" class="ai-btn-container">
+            <button id="ai-btn" class="ai-btn" onclick="analyzeWithAI()">
+                ✨ AI로 뉴스 분석 및 요약하기
+            </button>
+        </div>
+
+        <div id="ai-briefing" class="ai-briefing">
+            <div class="ai-title">🤖 코다리 AI 뉴스 브리핑</div>
+
+            <div class="ai-section">
+                <div class="ai-label">📰 핵심 요약</div>
+                <ul id="ai-summary" class="ai-summary-list ai-content"></ul>
+            </div>
+
+            <div class="ai-section">
+                <div class="ai-label">🎭 뉴스 분위기 (감정)</div>
+                <div id="ai-sentiment" class="ai-content"></div>
+            </div>
+
+            <div class="ai-section">
+                <div class="ai-label">💡 비즈니스 인사이트</div>
+                <div id="ai-insight" class="ai-content"></div>
+            </div>
+
+            <div class="ai-section">
+                <div class="ai-label">🔍 연관 추천 키워드</div>
+                <div id="ai-keywords" class="keyword-container"></div>
+            </div>
+        </div>
+
         <div id="results-count"></div>
         <div id="results"></div>
     </div>
 
     <script>
+        let currentNewsItems = [];
+
         async function search() {
             const kw = document.getElementById('keyword').value.trim();
             if (!kw) return;
@@ -169,9 +328,13 @@
             const resultsDiv = document.getElementById('results');
             const countDiv = document.getElementById('results-count');
             const loading = document.getElementById('loading');
+            const aiBtnContainer = document.getElementById('ai-btn-container');
+            const aiBriefing = document.getElementById('ai-briefing');
 
             resultsDiv.innerHTML = '';
             countDiv.innerHTML = '';
+            aiBtnContainer.style.display = 'none';
+            aiBriefing.style.display = 'none';
             loading.style.display = 'block';
 
             try {
@@ -184,8 +347,11 @@
 
                 loading.style.display = 'none';
 
-                if (data.results) {
+                if (data.results && data.results.length > 0) {
+                    currentNewsItems = data.results;
+                    aiBtnContainer.style.display = 'block';
                     countDiv.innerHTML = `${data.results.length}개의 최신 뉴스 검색 결과`;
+
                     data.results.forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'search-result';
@@ -211,11 +377,83 @@
                     });
                 } else if (data.error) {
                     resultsDiv.innerHTML = `<p style="color:red; text-align:center">오류: ${data.error}</p>`;
+                } else {
+                    resultsDiv.innerHTML = `<p style="text-align:center">검색 결과가 없습니다.</p>`;
                 }
             } catch (e) {
                 loading.style.display = 'none';
-                resultsDiv.innerHTML = `<p style="color:red; text-align:center">요청 패실: ${e.message}</p>`;
+                resultsDiv.innerHTML = `<p style="color:red; text-align:center">요청 실패: ${e.message}</p>`;
             }
+        }
+
+        async function analyzeWithAI() {
+            const aiBtn = document.getElementById('ai-btn');
+            const aiBriefing = document.getElementById('ai-briefing');
+            const loading = document.getElementById('loading');
+
+            if (currentNewsItems.length === 0) return;
+
+            aiBtn.disabled = true;
+            aiBtn.innerHTML = '✨ AI가 분석 중... 잠시만 기다려주세요';
+            loading.style.display = 'block';
+            aiBriefing.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/ai_analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: currentNewsItems })
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    displayAIResults(data);
+                }
+            } catch (e) {
+                alert('AI 분석 요청에 실패했습니다: ' + e.message);
+            } finally {
+                loading.style.display = 'none';
+                aiBtn.disabled = false;
+                aiBtn.innerHTML = '✨ AI로 뉴스 분석 및 요약하기';
+            }
+        }
+
+        function displayAIResults(data) {
+            const aiBriefing = document.getElementById('ai-briefing');
+            const summaryList = document.getElementById('ai-summary');
+            const sentimentDiv = document.getElementById('ai-sentiment');
+            const insightDiv = document.getElementById('ai-insight');
+            const keywordDiv = document.getElementById('ai-keywords');
+
+            // Clear previous results
+            summaryList.innerHTML = '';
+            keywordDiv.innerHTML = '';
+
+            // Summary
+            data.summary.forEach(s => {
+                const li = document.createElement('li');
+                li.textContent = s;
+                summaryList.appendChild(li);
+            });
+
+            // Sentiment
+            sentimentDiv.textContent = data.sentiment;
+
+            // Insight
+            insightDiv.textContent = data.insight;
+
+            // Keywords
+            data.keywords.forEach(k => {
+                const span = document.createElement('span');
+                span.className = 'keyword-tag';
+                span.textContent = k;
+                keywordDiv.appendChild(span);
+            });
+
+            aiBriefing.style.display = 'block';
+            aiBriefing.scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </body>

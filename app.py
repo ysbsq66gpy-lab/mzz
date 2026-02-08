@@ -7,9 +7,14 @@ import xml.etree.ElementTree as ET
 import urllib.parse
 import re
 import os
+import json
 from email.utils import parsedate_to_datetime
 from datetime import datetime
 import pytz
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__, template_folder='templates')
 
@@ -93,6 +98,55 @@ def search_keyword():
         return jsonify(results=items)
     except Exception as e:
         return jsonify(error=str(e)), 500
+
+@app.route('/api/ai_analyze', methods=['POST'])
+def ai_analyze():
+    """Analyze news results using Gemini AI."""
+    data = request.get_json(silent=True) or {}
+    items = data.get('items', [])
+    if not items:
+        return jsonify(error='분석할 뉴스 항목이 없습니다.'), 400
+    
+    api_key = os.environ.get('GEMINI_API_KEY')
+    if not api_key:
+        return jsonify(error='AI API Key가 설정되지 않았습니다. 서버지기(코다리)에게 문의하세요!'), 500
+
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        # Prepare content for AI (limit to top 10 for tokens and speed)
+        content = "\n".join([f"- 제목: {item['title']}\n  요약: {item['snippet']}" for item in items[:10]])
+        
+        prompt = f"""
+        당신은 전문 뉴스 분석가입니다. 아래 제공된 뉴스 목록을 바탕으로 다음 4가지를 수행해주세요:
+        1. 핵심 내용 3줄 요약 (리스트 형식)
+        2. 전체적인 뉴스 분위기(감정) 분석 (긍정/부정/중립 및 짧은 이유)
+        3. 이 뉴스들이 시사하는 비즈니스/사회적 인사이트 한 문장
+        4. 사용자가 더 찾아보면 좋을 만한 연관 키워드 3개 (리스트 형식)
+
+        뉴스 목록:
+        {content}
+
+        응답은 반드시 아래 JSON 형식을 지켜주세요:
+        {{
+            "summary": ["요약1", "요약2", "요약3"],
+            "sentiment": "분석 결과",
+            "insight": "인사이트 내용",
+            "keywords": ["키워드1", "키워드2", "키워드3"]
+        }}
+        JSON 형식 외에 다른 말은 절대 하지 마세요.
+        """
+        
+        response = model.generate_content(prompt)
+        # Clean response text
+        json_str = response.text.replace('```json', '').replace('```', '').strip()
+        analysis = json.loads(json_str)
+        
+        return jsonify(analysis)
+    except Exception as e:
+        print(f"AI Error: {e}")
+        return jsonify(error=f'AI 분석 중 오류가 발생했습니다: {str(e)}'), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5005))
