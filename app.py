@@ -113,9 +113,27 @@ def ai_analyze():
 
     try:
         genai.configure(api_key=api_key)
-        # Use gemini-1.5-flash for better compatibility
-        model = genai.GenerativeModel('gemini-1.5-flash')
         
+        # Try multiple models in order of preference
+        models_to_try = ['gemini-1.5-flash', 'gemini-pro']
+        model = None
+        last_error = None
+
+        for model_name in models_to_try:
+            try:
+                print(f"DEBUG: Attempting AI analysis with {model_name}...")
+                temp_model = genai.GenerativeModel(model_name)
+                # Validation check
+                model = temp_model
+                break
+            except Exception as e:
+                print(f"DEBUG: Model {model_name} failed: {e}")
+                last_error = e
+                continue
+        
+        if not model:
+            raise Exception(f"사용 가능한 AI 모델이 없습니다. 마지막 에러: {last_error}")
+
         # Prepare content for AI (limit to top 10 for tokens and speed)
         content = "\n".join([f"- 제목: {item['title']}\n  요약: {item['snippet']}" for item in items[:10]])
         
@@ -139,12 +157,10 @@ def ai_analyze():
         JSON 형식 외에 다른 말은 절대 하지 마세요.
         """
         
-        print(f"DEBUG: AI prompt sent for {len(items)} items")
         response = model.generate_content(prompt)
         
-        # Check if response is valid
         if not response or not response.text:
-            raise Exception("AI로부터 응답을 받지 못했습니다.")
+            raise Exception("AI로부터 유효한 응답을 받지 못했습니다.")
 
         # Clean response text
         json_str = response.text.replace('```json', '').replace('```', '').strip()
