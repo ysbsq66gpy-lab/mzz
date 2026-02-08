@@ -170,6 +170,34 @@ def ai_analyze():
         print(f"AI ERROR DETAILS:\n{error_msg}")
         return jsonify(error=f'AI 분석 중 오류가 발생했습니다: {str(e)}'), 500
 
+@app.route('/api/debug_ai')
+def debug_ai():
+    """Debug endpoint to check AI environment."""
+    import sys
+    try:
+        api_key = os.environ.get('GEMINI_API_KEY')
+        key_status = "Set" if api_key else "Not Set"
+        if api_key:
+             key_status += f" (Length: {len(api_key)}, Starts with: {api_key[:4]}...)"
+        
+        genai.configure(api_key=api_key)
+        models = []
+        try:
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    models.append(m.name)
+        except Exception as e:
+            models = [f"Error listing models: {str(e)}"]
+
+        return jsonify({
+            "python_version": sys.version,
+            "google_generativeai_version": genai.__version__,
+            "api_key_status": key_status,
+            "available_models": models
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5005))
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
