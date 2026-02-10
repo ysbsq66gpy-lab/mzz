@@ -38,9 +38,18 @@ def search_keyword():
     rss_url = f'https://news.google.com/rss/search?q={query}&hl=ko&gl=KR&ceid=KR:ko'
     
     try:
-        resp = requests.get(rss_url, timeout=10)
+        # Add User-Agent to avoid being blocked
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        resp = requests.get(rss_url, headers=headers, timeout=10)
         resp.raise_for_status()
-        root = ET.fromstring(resp.content)
+        
+        try:
+            root = ET.fromstring(resp.content)
+        except ET.ParseError as e:
+            return jsonify(error=f'RSS 파싱 오류: {str(e)}'), 500
+
         items = []
         
         for i, item in enumerate(root.iter('item')):
@@ -109,7 +118,7 @@ def ai_analyze():
     
     api_key = os.environ.get('GEMINI_API_KEY')
     if not api_key:
-        return jsonify(error='AI API Key가 설정되지 않았습니다. 서버지기(코다리)에게 문의하세요!'), 500
+        return jsonify(error='AI API Key가 설정되지 않았습니다. .env 파일을 확인해주세요!'), 500
 
     try:
         genai.configure(api_key=api_key)
@@ -137,14 +146,15 @@ def ai_analyze():
         JSON 형식 외에 다른 말은 절대 하지 마세요.
         """
 
-        # Try multiple models in order of preference (using full names from debug info)
+        # Try multiple models in order of preference
         models_to_try = [
+            'gemini-3.0-flash',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro',
+            'gemini-pro',
             'models/gemini-1.5-flash',
-            'models/gemini-1.5-flash-latest',
             'models/gemini-1.5-pro',
-            'models/gemini-1.5-pro-latest',
-            'models/gemini-pro',
-            'models/gemini-1.0-pro'
         ]
         
         analysis_result = None
@@ -157,11 +167,24 @@ def ai_analyze():
                 response = model.generate_content(prompt)
                 
                 if response and response.text:
-                    # Clean response text
-                    json_str = response.text.replace('```json', '').replace('```', '').strip()
-                    analysis_result = json.loads(json_str)
-                    print(f"DEBUG: Successfully got response from {model_name}")
-                    break
+                    # Robust JSON extraction using regex
+                    json_str = response.text
+                    # Combine multiple regex substitutions to be safer
+                    # First try to find JSON block
+                    json_match = re.search(r'\{[\s\S]*\}', json_str)
+                    if json_match:
+                        json_str = json_match.group(0)
+                    
+                    try:
+                        analysis_result = json.loads(json_str)
+                        print(f"DEBUG: Successfully got response from {model_name}")
+                        break
+                    except json.JSONDecodeError as je:
+                         error_msg = f"JSON Decode Error for {model_name}: {str(je)}"
+                         print(f"DEBUG: {error_msg}")
+                         error_logs.append(error_msg)
+                         continue
+
             except Exception as e:
                 error_msg = f"Model {model_name} failed: {str(e)}"
                 print(f"DEBUG: {error_msg}")

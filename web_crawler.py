@@ -15,13 +15,16 @@ from collections import deque
 def crawl(start_url, max_depth=1):
     visited = set()
     queue = deque([(start_url, 0)])
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
     while queue:
         url, depth = queue.popleft()
         if url in visited or depth > max_depth:
             continue
         visited.add(url)
         try:
-            resp = requests.get(url, timeout=10)
+            resp = requests.get(url, headers=headers, timeout=10)
             resp.raise_for_status()
         except Exception as e:
             print(f"[error] {url}: {e}", file=sys.stderr)

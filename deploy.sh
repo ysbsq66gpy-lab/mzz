@@ -28,7 +28,7 @@ git status
 
 # 2. Python 문법 검사
 echo -e "\n${BLUE}🔍 Python 문법 검사...${NC}"
-python3 -m py_compile app.py cli_crawler.py web_crawler.py
+python -m py_compile app.py cli_crawler.py web_crawler.py
 echo -e "${GREEN}✓ 모든 Python 파일 문법 검사 통과${NC}"
 
 # 3. 변경사항 추가

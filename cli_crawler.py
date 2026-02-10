@@ -38,36 +38,42 @@ def init_db():
 init_db()
 
 def extract_article(url):
-    resp = requests.get(url, timeout=10)
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, 'html.parser')
-    # title
-    title_tag = soup.find('meta', property='og:title')
-    title = title_tag['content'] if title_tag else 'No title found'
-    # body extraction (same fallback selectors as Flask app)
-    article = soup.find('article', {'id': 'dic_area'})
-    if not article:
-        article = (
-            soup.find('div', {'id': 'articleBody'})
-            or soup.find('div', {'class': re.compile(r"article[_-]body", re.I)})
-            or soup.find('div', {'class': re.compile(r"article[_-]content", re.I)})
-            or soup.find('section', {'class': re.compile(r"article[_-]body", re.I)})
-            or soup.find('article')
-            or soup.find('div', {'class': re.compile(r"article[-_]?(body|content|text)", re.I)})
-            or soup.find('section', {'class': re.compile(r"article[-_]?(body|content|text)", re.I)})
-        )
-    body = ''
-    if article:
-        for tag in article.find_all(['script', 'style']):
-            tag.decompose()
-        body = '\n'.join(
-            p.get_text(strip=True)
-            for p in article.find_all(['p', 'strong', 'div', 'span', 'h1', 'h2', 'h3'])
-            if p.get_text(strip=True)
-        )
-    else:
-        body = '본문을 찾을 수 없습니다.'
-    return title, body
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        # title
+        title_tag = soup.find('meta', property='og:title')
+        title = title_tag['content'] if title_tag else 'No title found'
+        # body extraction (same fallback selectors as Flask app)
+        article = soup.find('article', {'id': 'dic_area'})
+        if not article:
+            article = (
+                soup.find('div', {'id': 'articleBody'})
+                or soup.find('div', {'class': re.compile(r"article[_-]body", re.I)})
+                or soup.find('div', {'class': re.compile(r"article[_-]content", re.I)})
+                or soup.find('section', {'class': re.compile(r"article[_-]body", re.I)})
+                or soup.find('article')
+                or soup.find('div', {'class': re.compile(r"article[-_]?(body|content|text)", re.I)})
+                or soup.find('section', {'class': re.compile(r"article[-_]?(body|content|text)", re.I)})
+            )
+        body = ''
+        if article:
+            for tag in article.find_all(['script', 'style']):
+                tag.decompose()
+            body = '\n'.join(
+                p.get_text(strip=True)
+                for p in article.find_all(['p', 'strong', 'div', 'span', 'h1', 'h2', 'h3'])
+                if p.get_text(strip=True)
+            )
+        else:
+            body = '본문을 찾을 수 없습니다.'
+        return title, body
+    except Exception as e:
+        return 'Error', str(e)
 
 def store_article(url, title, body):
     conn = get_db_connection()
