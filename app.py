@@ -11,7 +11,7 @@ import json
 from email.utils import parsedate_to_datetime
 from datetime import datetime
 import pytz
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -110,7 +110,7 @@ def search_keyword():
 
 @app.route('/api/ai_analyze', methods=['POST'])
 def ai_analyze():
-    """Analyze news results using Gemini AI."""
+    """Analyze news results using Google GenAI SDK (Gemini)."""
     data = request.get_json(silent=True) or {}
     items = data.get('items', [])
     if not items:
@@ -121,7 +121,8 @@ def ai_analyze():
         return jsonify(error='AI API Key가 설정되지 않았습니다. .env 파일을 확인해주세요!'), 500
 
     try:
-        genai.configure(api_key=api_key)
+        # Initialize client with the new SDK
+        client = genai.Client(api_key=api_key)
         
         # Prepare content for AI (limit to top 10 for tokens and speed)
         content = "\n".join([f"- 제목: {item['title']}\n  요약: {item['snippet']}" for item in items[:10]])
@@ -149,12 +150,11 @@ def ai_analyze():
         # Try multiple models in order of preference
         models_to_try = [
             'gemini-3.0-flash',
+            'gemini-3-flash-preview',
             'gemini-2.0-flash',
+            'gemini-2.0-flash-exp',
             'gemini-1.5-flash',
             'gemini-1.5-pro',
-            'gemini-pro',
-            'models/gemini-1.5-flash',
-            'models/gemini-1.5-pro',
         ]
         
         analysis_result = None
@@ -163,8 +163,12 @@ def ai_analyze():
         for model_name in models_to_try:
             try:
                 print(f"DEBUG: Attempting AI analysis with {model_name}...")
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(prompt)
+                
+                # New SDK call format
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
                 
                 if response and response.text:
                     # Robust JSON extraction using regex
@@ -214,20 +218,29 @@ def debug_ai():
         if api_key:
              key_status += f" (Length: {len(api_key)}, Starts with: {api_key[:4]}...)"
         
-        genai.configure(api_key=api_key)
-        models = []
+        # SDK Version check
+        sdk_version = "Unknown"
         try:
-            for m in genai.list_models():
-                if 'generateContent' in m.supported_generation_methods:
-                    models.append(m.name)
+            from importlib.metadata import version
+            sdk_version = version("google-genai")
+        except:
+             pass
+
+        # Try to initialize client
+        client_status = "Not Initialized"
+        try:
+            if api_key:
+                client = genai.Client(api_key=api_key)
+                client_status = "Initialized (Lazy)"
         except Exception as e:
-            models = [f"Error listing models: {str(e)}"]
+            client_status = f"Initialization Error: {str(e)}"
 
         return jsonify({
             "python_version": sys.version,
-            "google_generativeai_version": genai.__version__,
+            "google_genai_sdk_version": sdk_version,
             "api_key_status": key_status,
-            "available_models": models
+            "client_status": client_status,
+            "note": "Using new google-genai SDK. List models not directly supported in debug view yet."
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
